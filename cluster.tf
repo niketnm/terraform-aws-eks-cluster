@@ -10,8 +10,6 @@ resource "aws_eks_cluster" "eks" {
     subnet_ids         = var.aws_private_subnet_ids
   }
 
-  instance_types = var.instance_types
-
   depends_on = [
     aws_iam_role_policy_attachment.cluster_EKSClusterPolicy,
     aws_iam_role_policy_attachment.cluster_AmazonEKSServicePolicy,
@@ -19,19 +17,22 @@ resource "aws_eks_cluster" "eks" {
 }
 
 resource "aws_eks_node_group" "eks_node_group" {
-  cluster_name    = var.cluster-name
-  node_group_name = "${var.cluster-name}-default-node-group"
+  cluster_name    = var.cluster_name
+  node_group_name = "${var.cluster_name}-default-node-group"
   node_role_arn   = aws_iam_role.node_role.arn
   subnet_ids      = var.aws_private_subnet_ids
-  instance_types = [
-    var.instance_type
-  ]
+   scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
   depends_on = [
     aws_eks_cluster.eks,
     aws_iam_role_policy_attachment.node_EKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node_EKS_CNI_Policy
   ]
   tags = {
-    Name = "${var.cluster-name}-default-node-group"
+    Name = "${var.cluster_name}-default-node-group"
   }
 }

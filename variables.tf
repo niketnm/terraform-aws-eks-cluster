@@ -4,7 +4,7 @@ variable "aws_region" {
   description = "The AWS Region to deploy EKS"
 }
 
-variable "var.k8s_version" {
+variable "k8s_version" {
   default = "1.30"
   type    = number
 }
@@ -17,10 +17,8 @@ variable "aws_private_subnet_ids" {
   type = list(string)
 }
 
-variable "instance_types" {
-  type    = list(string)
-  default = ["t3.medium"]
+variable "cluster_name" {
+  type = string
 }
-
 
 
