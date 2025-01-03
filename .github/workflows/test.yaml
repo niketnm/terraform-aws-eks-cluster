@@ -1,0 +1,56 @@
+name: Release OHIF to prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        required: true
+        default: main
+
+
+# Allow one concurrent for release deployment
+concurrency:
+  group: deploy-release
+
+env:
+  HOME: /root
+  SPACES_CLI_CICD: true
+  SPACES_SOLUTION_FILE: ohif-spaces-solution.yaml
+  SPACES_SOLUTION_ROLE: cicd-runner-admin
+
+jobs:
+  release-production:
+    name: Release to Production
+    environment: prod
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: ./ohif
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install Build Agent SSH Key
+        uses: niaid/monarch-actions-key-writer@v2
+        with:
+          key: ${{ secrets.NIAID_BUILD_AGENTS_SSH_KEY }}
+          known_hosts: ${{ secrets.NIAID_KNOWN_HOSTS }}
+          if_key_exists: replace
+
+      - name: Export PATH
+        id: spaces-path
+        run: echo "$PATH:/root/.spaces-cli/bin" >> $GITHUB_PATH
+
+      - name: Update Spaces CLI
+        id: spaces-cli-update
+        run: spaces update -stable
+
+      - name: Deploy prod
+        env:
+          SPACES_SOLUTION_ENV: prod
+        run: |
+          spaces task -- promote-tag -- ${{ github.ref_name }} prod
+          spaces task -- init
+          spaces task -- deploy
