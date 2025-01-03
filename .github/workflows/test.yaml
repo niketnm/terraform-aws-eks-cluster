@@ -2,10 +2,13 @@ name: Release OHIF to prod
 
 on:
   workflow_dispatch:
-    branches:
-      - main
-  workflow_run:
-    branches: main
+    branch: 
+      description: 'Do you want to deploy to DEV, QA or Prod?'
+      required: true
+      type: choice
+      default: "monarch-qa"
+      options:
+        - "monarch-qa"
 
 
 # Allow one concurrent for release deployment
