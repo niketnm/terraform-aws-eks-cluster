@@ -1,36 +1,42 @@
-name: Release OHIF to prod
+name: Build
 
 on:
   workflow_dispatch:
-    branch_name:
-      - main
-
-
-# Allow one concurrent for release deployment
-concurrency:
-  group: deploy-release
+    inputs:
+      environments:
+        description: 'Do you want to build  DEV, QA or Prod?'
+          required: true
+          type: choice
+          default: "dev"
+          options:
+            - "dev"
+            - "qa"
+            - "prod"
 
 env:
   HOME: /root
   SPACES_CLI_CICD: true
-  SPACES_SOLUTION_FILE: ohif-spaces-solution.yaml
   SPACES_SOLUTION_ROLE: cicd-runner-admin
+  SPACES_SOLUTION_ENV: ${{ github.event.inputs.environment }}
 
 jobs:
-  release-production:
-    name: Release to Production
-    environment: prod
-    runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' }}
+  build:
+    name: Build
+    runs-on: ${{ inputs.runs-on }}
     defaults:
       run:
-        working-directory: ./ohif
+        working-directory: ./
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           fetch-depth: 1
-
+      - name: Build App
+        id: buildApp
+        run: |
+          cd ./source
+         
+          cd ../
       - name: Install Build Agent SSH Key
         uses: niaid/monarch-actions-key-writer@v2
         with:
@@ -46,10 +52,32 @@ jobs:
         id: spaces-cli-update
         run: spaces update -stable
 
-      - name: Deploy prod
-        env:
-          SPACES_SOLUTION_ENV: prod
-        run: |
-          spaces task -- promote-tag -- ${{ github.ref_name }} prod
-          spaces task -- init
-          spaces task -- deploy
+      - name: Build
+        run: - spaces build image -file {{.SPACES_SOLUTION_FILE}} -tag {{.DOCKER_IMAGE_TAG}} -promote-to {{.SPACES_SOLUTION_ENV}}
+
+        image_scan:
+          needs: [ build-and-deploy ]
+          runs-on: self-hosted
+          name: Docker_scan
+          defaults:
+            run:
+              working-directory: ./ohif
+          steps:
+            - name: Install Build Agent SSH Key
+              uses: niaid/monarch-actions-key-writer@v2
+              with:
+                key: ${{ secrets.NIAID_BUILD_AGENTS_SSH_KEY }}
+                known_hosts: ${{ secrets.NIAID_KNOWN_HOSTS }}
+                if_key_exists: replace
+
+            - name: Export PATH
+              id: spaces-path
+              run: echo "$PATH:/root/.spaces-cli/bin" >> $GITHUB_PATH
+
+            - name: Update Spaces CLI
+              id: spaces-cli-update
+              run: spaces update -stable
+
+            - name: docker scan
+              run: |
+                spaces task -- scan
