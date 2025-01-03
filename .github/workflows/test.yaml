@@ -2,8 +2,8 @@ name: Release OHIF to prod
 
 on:
   workflow_dispatch:
-    inputs:
-      branch_name: main
+    branches:
+      - main
 
 
 # Allow one concurrent for release deployment
