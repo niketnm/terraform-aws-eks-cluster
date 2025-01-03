@@ -5,13 +5,13 @@ on:
     inputs:
       environments:
         description: 'Do you want to build  DEV, QA or Prod?'
-          required: true
-          type: choice
-          default: "dev"
-          options:
-            - "dev"
-            - "qa"
-            - "prod"
+        required: true
+        type: choice
+        default: "dev"
+        options:
+          - "dev"
+          - "qa"
+          - "prod"
 
 env:
   HOME: /root
