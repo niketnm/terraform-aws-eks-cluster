@@ -53,4 +53,4 @@ jobs:
         run: spaces update -stable
 
       - name: Build
-        run: - spaces build image -file {{.SPACES_SOLUTION_FILE}} -tag {{.DOCKER_IMAGE_TAG}} -promote-to {{.SPACES_SOLUTION_ENV}}
+        run: spaces build image -file {{.SPACES_SOLUTION_FILE}} -tag {{.DOCKER_IMAGE_TAG}} -promote-to {{.SPACES_SOLUTION_ENV}}
