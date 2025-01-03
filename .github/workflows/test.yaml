@@ -3,7 +3,7 @@ name: Build
 on:
   workflow_dispatch:
     inputs:
-      environments:
+      environment:
         description: 'Do you want to build  DEV, QA or Prod?'
         required: true
         type: choice
